@@ -66,7 +66,7 @@ if ($_POST['addcart'])
         else
             $price = $_POST['price'];
         
-        $product = array('name' => stripslashes($_POST['product']), 'price' => $price, 'quantity' => $count, 'cartLink' => $_POST['cartLink'], 'item_number' => $_POST['item_number']);
+        $product = array('name' => stripslashes($_POST['product']), 'price' => $price, 'quantity' => $count, 'cartLink' => $_POST['cartLink'], 'item_number' => $_POST['item_number'], 'weight' => $_POST['weight']);
         array_push($products, $product);
     }
     
@@ -165,12 +165,13 @@ function ps_print_wp_shopping_cart()
         ";
         
         $form .= "
-            <input type=\"hidden\" name=\"item_descr_$count\" value=\"".$item['name']."\" />
-            <input type=\"hidden\" name=\"item_valor_$count\" value='".str_replace('.','',$item['price'])."' />
-            <input type=\"hidden\" name=\"item_quant_$count\" value=\"".$item['quantity']."\" />
-            <input type='hidden' name='item_id_$count' value='".$count."' />
+            <input type=\"hidden\" name=\"itemDescription$count\" value=\"".$item['name']."\" />
+            <input type=\"hidden\" name=\"itemAmount$count\" value='".str_replace('.','',$item['price'])."' />
+            <input type=\"hidden\" name=\"itemQuantity$count\" value=\"".$item['quantity']."\" />
+            <input type='hidden' name='itemId$count' value='".$count."' />
+            <input type=\"hidden\" name=\"itemWeight$count\" value='".$item['weight']."' />
         ";
-        $form .= "<input type=\"hidden\" name=\"item_frete_$count\" value=\"0\" />";
+        $form .= "<input type=\"hidden\" name=\"shippingType\" value=\"1\" />";/* '1' = Pac, '2' = Sedex, '3' ou vazio = Escolha via site pagseguro */
         $count++;
     }
     }
@@ -185,14 +186,14 @@ function ps_print_wp_shopping_cart()
        		<tr><td colspan='4'>";
 
        
-              	$output .= "<form action=\"https://pagseguro.uol.com.br/security/webpagamentos/webpagto.aspx\" method=\"post\">$form";
+              	$output .= "<form action=\"https://pagseguro.uol.com.br/v2/checkout/payment.html\" method=\"post\">$form";
     			if ($count)
             		$output .= '<input type="image" src="'.get_bloginfo('wpurl').'/wp-content/plugins/wordpress-pagseguro-shopping-cart/images/pagseguro_checkout.png" name="submit" alt="Pague com Pagseguro - é rápido, simples e seguro!" />';
        
     			$output .= $urls.'
-			    <input type="hidden" name="email_cobranca" value="'.$email.'" />
+			    <input type="hidden" name="receiverEmail" value="'.$email.'" />
           <input type="hidden" name="tipo" value="CP">
-          <input type="hidden" name="moeda" value="BRL">
+          <input type="hidden" name="currency" value="BRL">
 			    </form>';          
        	}       
        	$output .= "
@@ -238,6 +239,10 @@ function ps_print_wp_cart_button($content)
         '" /><input type="hidden" name="shipping" value="',    
         $content);  
                
+	$forms = str_replace(':weight:',    
+        '" /><input type="hidden" name="weight" value="',    
+        $content);
+
         $forms = str_replace(':end]',    
         '" /><input type="hidden" name="addcart" value="1" /><input type="hidden" name="cartLink" value="'.ps_cart_current_page_url().'" />
         </form></object>',    
@@ -301,7 +306,7 @@ function ps_show_ps_wp_cart_options_page () {
      <fieldset class="options">
     <legend>Como usar:</legend>
 
-    <p>1. Para adicionar um botão 'Adicionar ao Carrinho' simplesmente insira o texto <strong>[wp_cart:NOME-DO-PRODUTO:price:VALOR-DO-PRODUTO:end]</strong> ao artigo ou página, próximo ao produto. Substitua NOME-DO-PRODUTO e VALOR-DO-PRODUTO pelo nome e valor reais, assim: [wp_cart:Enxugador de gelo:price:129.50:end].</p>
+    <p>1. Para adicionar um botão 'Adicionar ao Carrinho' simplesmente insira o texto <strong>[wp_cart:NOME-DO-PRODUTO:price:VALOR-DO-PRODUTO:weight:PRECO-DO-PRODUTO:end]</strong> ao artigo ou página, próximo ao produto. Substitua NOME-DO-PRODUTO, VALOR-DO-PRODUTO e PRECO-DO-PRODUTO pelo nome, valor reais e peso em gramas, assim: [wp_cart:Enxugador de gelo:price:129.50:weight:750:end].</p>
 	<p>2. Para adicionar o carrinho de compras a um artigo ou página de checkout ou à sidebar simplesmente adicione o texto <strong>&lt;!--show-wp-shopping-cart--&gt;</strong> a um post, página ou sidebar. O carrinho só será visível quando o comprador adicionar pelo menos um produto. 
     </fieldset>
     
